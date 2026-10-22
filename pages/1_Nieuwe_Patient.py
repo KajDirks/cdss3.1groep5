@@ -89,6 +89,47 @@ BEHANDELING_CODES = {
     "Ja, geen chirurgie": 4,
 }
 
+DIAGNOSE_CODES = {
+    "Alleen overlijdensverklaring": 0,
+    "Klinisch": 1,
+    "Klinisch onderzoek": 2,
+    "Exploratieve chirurgie of obductie": 3,
+    "Specifieke tumormarkers": 4,
+    "Cytologie": 5,
+    "Histologische bevestiging metastasen": 6,
+    "Histologie": 7,
+    "Cytogenetica en/of moleculaire testen": 8,
+    "Onbekend": 9
+}
+
+MORF_LIJST = [
+    8243,
+    8073,
+    8250,
+    8012,
+    8046,
+    8143,
+    8560,
+    9053
+]
+
+GEDRAG_CODES = {
+    "Benigne": 0,
+    "Borderline": 1,
+    "In situ": 2,
+    "Maligne": 3,
+    "Metastase": 6,
+    "Invasief of metastase": 9
+}
+
+DIFF_CODES = {
+    "Graad 1 / goed gedifferentieerd": 1,
+    "Graad 2 / matig gedifferentieerd": 2,
+    "Graad 3 / slecht gedifferentieerd": 3,
+    "Graad 4 / ongedifferentieerd / anaplastisch / GGG4": 4,
+    "Onbekend": 9
+}
+
 
 # 4. Invoervelden
 
@@ -125,36 +166,36 @@ with st.form("new_patient_form"):
     # Diagnostische kenmerken
     st.subheader("Diagnostische kenmerken")
 
-    diag_basis = st.number_input(
+    diag_basis = st.selectbox(
         "Diagnostische basis (diag_basis)",
-        min_value=0,
-        max_value=10_000_000,
-        value=None,
-        step=1,
+        options=list(DIAGNOSE_CODES.keys()),
+        index=None,
+        placeholder="Selecteer diagnostische basis",
+        help="Selecteer de diagnostische basis van de tumor.",
     )
 
-    morf = st.number_input(
+    morf = st.selectbox(
         "Morfologie (morf)",
-        min_value=0,
-        max_value=10_000_000,
-        value=None,
-        step=1,
+        options=MORF_LIJST,
+        index=None,
+        placeholder="Selecteer morfologie",
+        help="Selecteer de morfologie van de tumor.",
     )
 
-    gedrag = st.number_input(
+    gedrag = st.selectbox(
         "Gedrag (gedrag)",
-        min_value=0,
-        max_value=10_000_000,
-        value=None,
-        step=1,
+        options=list(GEDRAG_CODES.keys()),
+        index=None,
+        placeholder="Selecteer gedrag",
+        help="Selecteer het gedrag van de tumor.",
     )
 
-    diffgrad = st.number_input(
+    diffgrad = st.selectbox(
         "Differentiatiegraad (diffgrad)",
-        min_value=0,
-        max_value=10_000_000,
-        value=None,
-        step=1,
+        options=list(DIFF_CODES.keys()),
+        index=None,
+        placeholder="Selecteer differentiatiegraad",
+        help="Selecteer de differentiatiegraad van de tumor.",
     )
 
     st.subheader("Tumorkenmerken")
@@ -214,12 +255,20 @@ if submitted:
     if stadium_label is None:
         errors.append("Selecteer een stadium.")
 
+    if diag_basis is None:
+        errors.append("Selecteer een diagnostische basis")
+
+    if morf is None:
+        errors.append("Selecteer een morfologie")
+
+    if gedrag is None:
+        errors.append("Selecteer een gedrag")
+
+    if diffgrad is None:
+        errors.append("Selecteer een differentiatiegraad")
+
     numeric_fields = {
         "leeft": leeft,
-        "diag_basis": diag_basis,
-        "morf": morf,
-        "gedrag": gedrag,
-        "diffgrad": diffgrad,
     }
 
     for field_name, value in numeric_fields.items():
@@ -245,10 +294,10 @@ if submitted:
             "leeft": int(leeft),
             "gesl": GESLACHT_CODES[geslacht_label],
             "tumsoort": 302310,
-            "diag_basis": int(diag_basis),
+            "diag_basis": DIAGNOSE_CODES[diag_basis],
             "morf": int(morf),
-            "gedrag": int(gedrag),
-            "diffgrad": int(diffgrad),
+            "gedrag": GEDRAG_CODES[gedrag],
+            "diffgrad": DIFF_CODES[diffgrad],
             "stadium": STADIUM_CODES[stadium_label],
             "chemo": BEHANDELING_CODES[chemo],
             "target": BEHANDELING_CODES[target],
