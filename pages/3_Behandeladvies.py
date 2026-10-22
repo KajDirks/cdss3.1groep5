@@ -242,7 +242,7 @@ if age <= 70:
         )
 
     st.divider()
-    st.subheader("Indicatieve chirurgische risicoclassificatie")
+    st.subheader("Indicatie van perioperatief overlijdensrisico")
 
     all_values_entered = all(
         value is not None
