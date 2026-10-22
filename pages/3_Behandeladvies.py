@@ -7,7 +7,7 @@ import streamlit as st
 
 
 st.set_page_config(
-    page_title="Behandeladvies | Longkanker CDSS",
+    page_title="Behandeladvies | NSCLC CDSS",
     page_icon="🫁",
     layout="wide",
 )
@@ -29,7 +29,7 @@ def load_patients():
             """
             SELECT id, display_name, leeft, chemo, target, rt
             FROM patient
-            ORDER BY display_name
+            ORDER BY id
             """
         ).fetchall()
 

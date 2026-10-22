@@ -13,7 +13,7 @@ import streamlit as st
 DB_FILE = Path(__file__).resolve().parent.parent / "ehr.db"
 
 st.set_page_config(
-    page_title="Patiënt verwijderen | Longkanker CDSS",
+    page_title="Patiënt verwijderen | NSCLC CDSS",
     page_icon="🫁",
     layout="wide",
 )

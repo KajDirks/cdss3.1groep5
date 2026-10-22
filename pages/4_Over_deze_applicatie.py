@@ -3,7 +3,7 @@ import streamlit as st
 """Informatiepagina over dit project en de ontwikkelgroep"""
 
 st.set_page_config(
-    page_title="Over deze applicatie | Longkanker CDSS",
+    page_title="Over deze applicatie | NSCLC CDSS",
     page_icon="🫁",
     layout="wide",
 )

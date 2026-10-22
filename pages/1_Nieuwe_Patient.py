@@ -14,7 +14,7 @@ import prediction
 DB_FILE = Path(__file__).resolve().parent.parent / "ehr.db"
 
 st.set_page_config(
-    page_title="Nieuwe patiënt | Longkanker CDSS",
+    page_title="Nieuwe patiënt | NSCLC CDSS",
     page_icon="🫁",
     layout="wide",
 )
@@ -81,7 +81,13 @@ GESLACHT_CODES = {
     "Vrouw": 2,
 }
 
-BEHANDELING_CODES = [0, 1, 2, 3, 4]
+BEHANDELING_CODES = {
+    "Nee": 0,
+    "Ja, alleen prechirurgisch": 1,
+    "Ja, alleen postchirurgisch": 2,
+    "Ja, pre en postchirurgisch": 3,
+    "Ja, geen chirurgie": 4,
+}
 
 
 # 4. Invoervelden
@@ -109,7 +115,7 @@ with st.form("new_patient_form"):
     # Leeftijd.
     leeft = st.number_input(
         "Leeftijd",
-        min_value=0,
+        min_value=18,
         max_value=120,
         value=None,
         step=1,
@@ -158,7 +164,7 @@ with st.form("new_patient_form"):
         options=list(STADIUM_CODES.keys()),
         index=None,
         placeholder="Selecteer stadium",
-        help="Selecteer het stadium volgens de codering van jouw dataset.",
+        help="Selecteer het stadium van de tumor.",
     )
 
     # Behandelingen
@@ -166,21 +172,21 @@ with st.form("new_patient_form"):
 
     chemo = st.selectbox(
         "Chemotherapie (chemo)",
-        options=BEHANDELING_CODES,
+        options=list(BEHANDELING_CODES.keys()),
         index=None,
         placeholder="Selecteer waarde",
     )
 
     target = st.selectbox(
         "Targeted therapy (target)",
-        options=BEHANDELING_CODES,
+        options=list(BEHANDELING_CODES.keys()),
         index=None,
         placeholder="Selecteer waarde",
     )
 
     rt = st.selectbox(
         "Radiotherapie (rt)",
-        options=BEHANDELING_CODES,
+        options=list(BEHANDELING_CODES.keys()),
         index=None,
         placeholder="Selecteer waarde",
     )
@@ -244,9 +250,9 @@ if submitted:
             "gedrag": int(gedrag),
             "diffgrad": int(diffgrad),
             "stadium": STADIUM_CODES[stadium_label],
-            "chemo": int(chemo),
-            "target": int(target),
-            "rt": int(rt),
+            "chemo": BEHANDELING_CODES[chemo],
+            "target": BEHANDELING_CODES[target],
+            "rt": BEHANDELING_CODES[rt],
             "SCLC": 0,
         }
 
