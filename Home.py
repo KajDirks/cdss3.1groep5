@@ -20,8 +20,11 @@ import prediction
 
 DB_FILE = Path(__file__).parent / "ehr.db"
 
-st.set_page_config(page_title="Longkanker CDSS Demo", page_icon="🫁", layout="wide")
-st.title("Longkanker Clinical Decision Support Demo")
+st.set_page_config(page_title="NSCLC CDSS Demo", page_icon="🫁", layout="wide")
+st.title("NSCLC Clinical Decision Support Demo")
+st.write("Welkom bij dit CDSS voor oncologen met NSCLC-patiënten. Selecteer een patiënt om de overlevingskans binnen de komende 5 jaar te laten voorspellen door het model,"
+         " druk op 'Open behandeladvies' om advies te krijgen over behandelingen, of scroll naar beneden om andere patiënt- en"
+         " tumorkenmerken te proberen voor de geselecteerde patiënt.")
 st.warning("Technische demo, niet bedoeld voor echte klinische beslissingen.")
 
 # 1. Check that the files we need are there
@@ -85,41 +88,72 @@ def forget_userinput():
     st.session_state.userstage = None
     st.session_state.userage = None
 
-def forget_userstage():
-    st.session_state.userstage = None
-
-def forget_userage():
-    st.session_state.userage = None
-
+col1, col2 = st.columns(2)
 
 # 3. The page
-st.subheader("Patiënten")
-patient_id = st.radio(
-    "Selecteer een patiënt uit de database",
-    options=list(patients),
-    format_func=lambda pid: patients[pid]["display_name"],
-    on_change=forget_userinput,  # a new patient starts without a typed-in value
-)
-current_patient = patients[patient_id]
+with col1:
+    st.subheader("Patiënten")
+    patient_id = st.radio(
+        "Selecteer een patiënt uit de database",
+        options=list(patients),
+        format_func=lambda pid: patients[pid]["display_name"],
+        on_change=forget_userinput,  # a new patient starts without a typed-in value
+    )
+    current_patient = patients[patient_id]
+
+with col2:
+    st.write("") # Create whitespace to better fit the page
+    st.write("")
+    st.write("")
+    userstage = st.session_state.userstage
+    userage = st.session_state.userage
+    p = prediction.get_prediction(model, current_patient, stadium=userstage, leeft=userage)
+    st.caption("Dit is de output van het model. De output van 0-1 geeft de voorspelde overlijdenskans binnen 5 jaar.")
+    st.metric("Voorspelde overlijdenskans binnen 5 jaar:", f"{p:.2f}")
+    if st.button("Open behandeladvies voor deze patiënt", type="primary"):
+        st.session_state["treatment_patient_id"] = patient_id
+        st.switch_page("pages/3_Behandeladvies.py")
+
+st.divider()
+
+STADIUM_CODES = {
+    "0": 0,
+    "1A": 1,
+    "1B": 2,
+    "2A": 3,
+    "2B": 4,
+    "3A": 5,
+    "3B": 6,
+    "3C": 7,
+    "4": 8,
+    "M": 9,
+}
 
 results = st.container()  # filled in below, but shown here, above the form
-
-with st.form("stage_form", clear_on_submit=True):
-    st.header("Aangepaste kenmerken invoeren")
-    st.subheader("Laat de velden leeg om de echte patiëntwaarden te gebruiken")
-    new_stage = st.number_input(
-        "Hier kunt u een nieuw stadium intypen om de invloed op de voorspelling te testen",
-        min_value=0, max_value=9, value=None, step=1,
-        help="0 = 0, 1 = 1A, 2 = 1B, 3 = 2A, 4 = 2B, 5 = 3A, 6 = 3B, 7 = 3C, 8 = 4, 9 = M",
-    )
-    new_age = st.number_input(
-    "Hier kunt u een nieuwe leeftijd intypen om de invloed op de voorspelling te testen.",
-    min_value=18, max_value=120, value=None, step=1,
-    help="Laat dit veld leeg en druk op 'Invoeren in model' om de bekende waarde te gebruiken.",
-    )
-    if st.form_submit_button("Invoeren in model"):
-        st.session_state.userstage = new_stage  # used for this prediction only, not saved
-        st.session_state.userage = new_age # Usedfor this prediction only, not saved
+with st.expander("Aangepaste kenmerken invoeren"):
+    with st.form("stage_form", clear_on_submit=True):
+        st.header("Aangepaste kenmerken invoeren")
+        st.subheader("Laat de velden leeg om de echte patiëntwaarden te gebruiken")
+        new_stage_label = st.selectbox(
+            "Hier kunt u een nieuw stadium selecteren om de invloed op de voorspelling te testen",
+            options = list(STADIUM_CODES.keys()),
+            index = None,
+            placeholder = "Selecteer stadium",
+            help = "Selecteer hier een tumorstadium om te testen",
+        )
+        new_stage = (
+            STADIUM_CODES[new_stage_label]
+            if new_stage_label is not None
+            else None)
+        new_age = st.number_input(
+        "Hier kunt u een nieuwe leeftijd intypen om de invloed op de voorspelling te testen.",
+        min_value=18, max_value=120, value=None, step=1,
+        help="Laat dit veld leeg en druk op 'Invoeren in model' om de bekende waarde te gebruiken.",
+        )
+        if st.form_submit_button("Invoeren in model"):
+            st.session_state.userstage = new_stage  # used for this prediction only, not saved
+            st.session_state.userage = new_age # Usedfor this prediction only, not saved
+            st.rerun()
 
 with results:
     userstage = st.session_state.userstage
@@ -129,8 +163,6 @@ with results:
     st.markdown(f"**Huidige patiënt:** {current_patient['display_name']}")
     st.markdown(f"**Gebruiker-ingevoerd stadium:** {userstage if userstage is not None else 'Geen stadium ingevoerd'}")
     st.markdown(f"**Gebruiker-ingevoerde leeftijd:** {userage if userage is not None else 'Geen leeftijd ingevoerd'}")
-    st.metric("Voorspelde overlijdenskans binnen 5 jaar:", f"{p:.2f}")
-    st.caption("Dit is de output van het model. De output van 0-1 geeft de voorspelde overlijdenskans binnen 5 jaar.")
 
     # Take only relevant comlumns to show to user
     RELEVANT_FEATURES = [
@@ -189,9 +221,3 @@ with results:
         })
 
 st.divider()
-st.subheader("Bekijk behandeladvies voor deze patiënt")
-
-
-if st.button("Open behandeladvies", type="primary"):
-    st.session_state["treatment_patient_id"] = patient_id
-    st.switch_page("pages/3_Behandeladvies.py")
